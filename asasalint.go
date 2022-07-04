@@ -3,6 +3,7 @@ package asasalint
 import (
 	"fmt"
 	"go/ast"
+	"go/token"
 	"go/types"
 
 	"golang.org/x/tools/go/analysis"
@@ -40,22 +41,51 @@ func (s *Searcher) CheckAndReport(n ast.Node, push bool, stack []ast.Node) bool 
 	if !ok {
 		return true
 	}
-
-	fn := s.Pass.TypesInfo.TypeOf(caller.Fun)
-	fnSign := fn.(*types.Signature)
-	if !fnSign.Variadic() {
+	if caller.Ellipsis != token.NoPos {
 		return true
+	}
+
+	fnType := s.Pass.TypesInfo.TypeOf(caller.Fun)
+	if !isSliceAnyVariadicFuncType(fnType) {
+		return true
+	}
+
+	lastArg := caller.Args[len(caller.Args)-1]
+	argType := s.Pass.TypesInfo.TypeOf(lastArg)
+	if !isSliceAnyType(argType) {
+		return true
+	}
+	node := lastArg
+	// report a diagnostic
+	d := analysis.Diagnostic{
+		Pos:      node.Pos(),
+		End:      node.End(),
+		Message:  fmt.Sprintf("pass []any as any to %s", fnType.String()),
+		Category: "asasalint",
+	}
+	s.Pass.Report(d)
+	return false
+}
+
+func isSliceAnyVariadicFuncType(typ types.Type) (r bool) {
+	fnSign, ok := typ.(*types.Signature)
+	if !ok || !fnSign.Variadic() {
+		return false
 	}
 
 	params := fnSign.Params()
-	param := params.At(params.Len() - 1)
-	varParamType := param.Type().(*types.Slice)
-	paramType, ok := varParamType.Elem().(*types.Interface)
-	if !ok || paramType.NumMethods() != 0 {
-		return true
+	lastParam := params.At(params.Len() - 1)
+	return isSliceAnyType(lastParam.Type())
+}
+
+func isSliceAnyType(typ types.Type) (r bool) {
+	sliceType, ok := typ.(*types.Slice)
+	if !ok {
+		return
 	}
-	// assert the last param is []any
-	fmt.Printf("paramType %#v\n", paramType)
-	fmt.Println("param", param)
-	return false
+	elemType, ok := sliceType.Elem().(*types.Interface)
+	if !ok {
+		return
+	}
+	return elemType.NumMethods() == 0
 }
