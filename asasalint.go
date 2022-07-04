@@ -5,6 +5,7 @@ import (
 	"go/ast"
 	"go/token"
 	"go/types"
+	"sync"
 
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/passes/inspect"
@@ -24,47 +25,55 @@ func run(pass *analysis.Pass) (interface{}, error) {
 	nodeFilter := []ast.Node{
 		(*ast.CallExpr)(nil),
 	}
-	search := &Searcher{
-		Pass: pass,
-	}
-
-	inspectorInfo.WithStack(nodeFilter, search.CheckAndReport)
+	search := &Searcher{Pass: pass}
+	inspectorInfo.Nodes(nodeFilter, search.CheckAndReport)
+	search.wg.Wait()
 	return nil, nil
 }
 
 type Searcher struct {
 	Pass *analysis.Pass
+	wg   sync.WaitGroup
 }
 
-func (s *Searcher) CheckAndReport(n ast.Node, push bool, stack []ast.Node) bool {
-	caller, ok := n.(*ast.CallExpr)
-	if !ok {
-		return true
-	}
-	if caller.Ellipsis != token.NoPos {
-		return true
-	}
+func (s *Searcher) CheckAndReport(n ast.Node, push bool) bool {
+	s.wg.Add(1)
+	go func() {
+		defer s.wg.Done()
+		caller, ok := n.(*ast.CallExpr)
+		if !ok {
+			return
+		}
+		if caller.Ellipsis != token.NoPos {
+			return
+		}
 
-	fnType := s.Pass.TypesInfo.TypeOf(caller.Fun)
-	if !isSliceAnyVariadicFuncType(fnType) {
-		return true
-	}
+		fnType := s.Pass.TypesInfo.TypeOf(caller.Fun)
+		// fmt.Println("process this func --> ", fnType.String())
+		if !isSliceAnyVariadicFuncType(fnType) {
+			return
+		}
+		if len(caller.Args) == 0 {
+			return
+		}
 
-	lastArg := caller.Args[len(caller.Args)-1]
-	argType := s.Pass.TypesInfo.TypeOf(lastArg)
-	if !isSliceAnyType(argType) {
-		return true
-	}
-	node := lastArg
-	// report a diagnostic
-	d := analysis.Diagnostic{
-		Pos:      node.Pos(),
-		End:      node.End(),
-		Message:  fmt.Sprintf("pass []any as any to %s", fnType.String()),
-		Category: "asasalint",
-	}
-	s.Pass.Report(d)
-	return false
+		lastArg := caller.Args[len(caller.Args)-1]
+		argType := s.Pass.TypesInfo.TypeOf(lastArg)
+		if !isSliceAnyType(argType) {
+			return
+		}
+		node := lastArg
+		// report a diagnostic
+		d := analysis.Diagnostic{
+			Pos:      node.Pos(),
+			End:      node.End(),
+			Message:  fmt.Sprintf("pass []any as any to %s", fnType.String()),
+			Category: "asasalint",
+		}
+		s.Pass.Report(d)
+	}()
+
+	return true
 }
 
 func isSliceAnyVariadicFuncType(typ types.Type) (r bool) {
