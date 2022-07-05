@@ -61,7 +61,7 @@ type Searcher struct {
 	wg   sync.WaitGroup
 }
 
-func (s *analyzer) AsCheckVisitor(pass *analysis.Pass) func(n ast.Node, push bool) bool {
+func (a *analyzer) AsCheckVisitor(pass *analysis.Pass) func(n ast.Node, push bool) bool {
 	return func(n ast.Node, push bool) (processed bool) {
 		processed = true
 
@@ -72,13 +72,16 @@ func (s *analyzer) AsCheckVisitor(pass *analysis.Pass) func(n ast.Node, push boo
 		if caller.Ellipsis != token.NoPos {
 			return
 		}
-
-		fnType := pass.TypesInfo.TypeOf(caller.Fun)
-		// fmt.Println("process this func --> ", fnType.String())
-		if !isSliceAnyVariadicFuncType(fnType) {
+		if len(caller.Args) == 0 {
 			return
 		}
-		if len(caller.Args) == 0 {
+		fnName := getFuncName(caller.Fun)
+		if a.excludes[fnName] {
+			return
+		}
+
+		fnType := pass.TypesInfo.TypeOf(caller.Fun)
+		if !isSliceAnyVariadicFuncType(fnType) {
 			return
 		}
 
@@ -88,16 +91,24 @@ func (s *analyzer) AsCheckVisitor(pass *analysis.Pass) func(n ast.Node, push boo
 			return
 		}
 		node := lastArg
-		// report a diagnostic
+
 		d := analysis.Diagnostic{
-			Pos:      node.Pos(),
-			End:      node.End(),
-			Message:  fmt.Sprintf("pass []any as any to %s", fnType.String()),
+			Pos: node.Pos(),
+			End: node.End(),
+			Message: fmt.Sprintf("pass []any as any to func %s %s",
+				fnName, fnType.String()),
 			Category: "asasalint",
 		}
 		pass.Report(d)
 		return
 	}
+}
+
+func getFuncName(fn ast.Expr) string {
+	if id, ok := fn.(*ast.Ident); ok {
+		return id.Name
+	}
+	return ""
 }
 
 func isSliceAnyVariadicFuncType(typ types.Type) (r bool) {
