@@ -50,12 +50,9 @@ type analyzer struct {
 
 func (a *analyzer) run(pass *analysis.Pass) (interface{}, error) {
 	inspectorInfo := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
-	nodeFilter := []ast.Node{
-		(*ast.CallExpr)(nil),
-	}
-	search := &Searcher{Pass: pass}
-	inspectorInfo.Nodes(nodeFilter, search.CheckAndReport)
-	search.wg.Wait()
+	nodeFilter := []ast.Node{(*ast.CallExpr)(nil)}
+
+	inspectorInfo.Nodes(nodeFilter, a.AsCheckVisitor(pass))
 	return nil, nil
 }
 
@@ -64,10 +61,10 @@ type Searcher struct {
 	wg   sync.WaitGroup
 }
 
-func (s *Searcher) CheckAndReport(n ast.Node, push bool) bool {
-	s.wg.Add(1)
-	go func() {
-		defer s.wg.Done()
+func (s *analyzer) AsCheckVisitor(pass *analysis.Pass) func(n ast.Node, push bool) bool {
+	return func(n ast.Node, push bool) (processed bool) {
+		processed = true
+
 		caller, ok := n.(*ast.CallExpr)
 		if !ok {
 			return
@@ -76,7 +73,7 @@ func (s *Searcher) CheckAndReport(n ast.Node, push bool) bool {
 			return
 		}
 
-		fnType := s.Pass.TypesInfo.TypeOf(caller.Fun)
+		fnType := pass.TypesInfo.TypeOf(caller.Fun)
 		// fmt.Println("process this func --> ", fnType.String())
 		if !isSliceAnyVariadicFuncType(fnType) {
 			return
@@ -86,7 +83,7 @@ func (s *Searcher) CheckAndReport(n ast.Node, push bool) bool {
 		}
 
 		lastArg := caller.Args[len(caller.Args)-1]
-		argType := s.Pass.TypesInfo.TypeOf(lastArg)
+		argType := pass.TypesInfo.TypeOf(lastArg)
 		if !isSliceAnyType(argType) {
 			return
 		}
@@ -98,10 +95,9 @@ func (s *Searcher) CheckAndReport(n ast.Node, push bool) bool {
 			Message:  fmt.Sprintf("pass []any as any to %s", fnType.String()),
 			Category: "asasalint",
 		}
-		s.Pass.Report(d)
-	}()
-
-	return true
+		pass.Report(d)
+		return
+	}
 }
 
 func isSliceAnyVariadicFuncType(typ types.Type) (r bool) {
