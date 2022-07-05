@@ -16,9 +16,7 @@ import (
 var defaultExcludes []string
 
 func init() {
-	defaultExcludes = strings.Split(
-		`Printf,Println,Errorf,Fprintf,Fprintln,Fatal,Fatalf,Panic,Panicf,Panicln,Print,Printf,Println,Sprintf,Sprintln`+
-			`Error,Errorf,Info,Infof,Warn,Warnf,Debug,Debugf`, `,`)
+	defaultExcludes = strings.Split(`Printf,Println,Errorf,Fprintf,Fprintln,Fatal,Fatalf,Panic,Panicf,Panicln,Print,Printf,Println,Sprintf,Sprintln,Error,Errorf,Info,Infof,Warn,Warnf,Debug,Debugf`, `,`)
 }
 
 func NewAnalyzer(excludes []string, include []string) *analysis.Analyzer {
