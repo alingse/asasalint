@@ -83,6 +83,11 @@ func (a *analyzer) AsCheckVisitor(pass *analysis.Pass) func(n ast.Node, push boo
 			return
 		}
 
+		fnSign := fnType.(*types.Signature)
+		if len(caller.Args) != fnSign.Params().Len() {
+			return
+		}
+
 		lastArg := caller.Args[len(caller.Args)-1]
 		argType := pass.TypesInfo.TypeOf(lastArg)
 		if !isSliceAnyType(argType) {

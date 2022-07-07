@@ -7,4 +7,7 @@ func main() {
 	getArgsLength(1, 2, 3)
 	getArgsLength([]any{1, 2, 3})
 	getArgsLength(append([]any{1, 2, 3}, 4, 5, 6))
+
+	getOneOrMore(a)
+	getOneOrMore(1, a)
 }
