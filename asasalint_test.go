@@ -80,3 +80,8 @@ func (a *A) hello2(a int, b int) {
 		return true
 	})
 }
+
+func TestNewAnalyzer(t *testing.T) {
+	_ = NewAnalyzer(nil, nil)
+	_ = NewAnalyzer([]string{"hello", ""}, []string{"hello", "world"})
+}

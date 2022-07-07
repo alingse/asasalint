@@ -26,7 +26,9 @@ func NewAnalyzer(excludes []string, include []string) *analysis.Analyzer {
 		a.excludes[exclude] = true
 	}
 	for _, exclude := range excludes {
-		a.excludes[exclude] = true
+		if exclude != "" {
+			a.excludes[exclude] = true
+		}
 	}
 
 	for _, include := range include {
