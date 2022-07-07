@@ -6,7 +6,6 @@ import (
 	"go/token"
 	"go/types"
 	"strings"
-	"sync"
 
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/passes/inspect"
@@ -54,11 +53,6 @@ func (a *analyzer) run(pass *analysis.Pass) (interface{}, error) {
 	return nil, nil
 }
 
-type Searcher struct {
-	Pass *analysis.Pass
-	wg   sync.WaitGroup
-}
-
 func (a *analyzer) AsCheckVisitor(pass *analysis.Pass) func(n ast.Node, push bool) bool {
 	return func(n ast.Node, push bool) (processed bool) {
 		processed = true
@@ -73,7 +67,7 @@ func (a *analyzer) AsCheckVisitor(pass *analysis.Pass) func(n ast.Node, push boo
 		if len(caller.Args) == 0 {
 			return
 		}
-		fnName := getFuncName(caller.Fun)
+		fnName := getFuncName(caller)
 		if a.excludes[fnName] {
 			return
 		}
@@ -107,9 +101,12 @@ func (a *analyzer) AsCheckVisitor(pass *analysis.Pass) func(n ast.Node, push boo
 	}
 }
 
-func getFuncName(fn ast.Expr) string {
-	if id, ok := fn.(*ast.Ident); ok {
+func getFuncName(caller *ast.CallExpr) string {
+	if id, ok := caller.Fun.(*ast.Ident); ok {
 		return id.Name
+	}
+	if s, ok := caller.Fun.(*ast.SelectorExpr); ok {
+		return s.Sel.Name
 	}
 	return ""
 }
