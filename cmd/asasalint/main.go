@@ -10,26 +10,23 @@ import (
 
 func main() {
 	var extraExclude string
-	var include string
-	var disableDefaultExclude bool
+	var noDefaultExclude bool
 	var ignoreInTest bool
 	flag.StringVar(&extraExclude,
 		"e",
 		"",
-		"Extra Exclude Func Names, like: FuncA,FuncB,Func",
+		"Extra Exclude Func Names, like: FuncA,append,Append",
 	)
-	flag.StringVar(&extraExclude, "i", "",
-		"Must Include Func Names, like: FuncA,FuncB,Func")
-	flag.BoolVar(&disableDefaultExclude, "no-default-exclude", false,
+	flag.BoolVar(&noDefaultExclude, "no-default-exclude", false,
 		"disbale the default exclude func names: "+asasalint.DefaultExclude)
 	flag.BoolVar(&ignoreInTest, "ignore-in-test", false,
-		"ingore case in * _test.go")
+		"ingore case in *_test.go")
 	flag.Parse()
 
 	setting := asasalint.LinterSetting{
-		Exclude:               strings.Split(extraExclude, ","),
-		Include:               strings.Split(include, ","),
-		DisableDefaultExclude: true,
+		Exclude:          strings.Split(extraExclude, ","),
+		NoDefaultExclude: noDefaultExclude,
+		IgnoreInTest:     ignoreInTest,
 	}
 	singlechecker.Main(asasalint.NewAnalyzer(setting))
 }
