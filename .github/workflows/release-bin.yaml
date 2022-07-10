@@ -36,6 +36,7 @@ jobs:
           distribution: goreleaser
           version: latest
           args: release --rm-dist
+          main: ./cmd/asasalint/main.go
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Your GoReleaser Pro key, if you are using the 'goreleaser-pro' distribution
