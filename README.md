@@ -72,4 +72,5 @@ func main() {
 
 1. add to golangci-lint
 2. given a SuggestEdition
-3. add `append` to default exclude
+3. add `append` to default exclude ?
+4. ingore pattern `fn(a, b, []any{1,2,3})` , because `[]any{1,2,3}` is most likely by design

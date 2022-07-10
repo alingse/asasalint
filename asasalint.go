@@ -15,22 +15,16 @@ import (
 const DefaultExclude = `Printf,Println,Errorf,Fprintf,Fprintln,Fatal,Fatalf,Panic,Panicf,Panicln,Print,Printf,Println,Sprintf,Sprintln,Error,Errorf,Info,Infof,Warn,Warnf,Debug,Debugf`
 
 type LinterSetting struct {
-	Exclude               []string
-	Include               []string
-	DisableDefaultExclude bool
-	IgnoreInTest          bool
+	Exclude          []string
+	NoDefaultExclude bool
+	IgnoreInTest     bool
 }
 
 func NewAnalyzer(setting LinterSetting) *analysis.Analyzer {
-	a := &analyzer{
-		excludes: make(map[string]bool),
-		setting:  setting,
-	}
-	a.init()
-
+	a := newAnalyzer(setting)
 	return &analysis.Analyzer{
 		Name:     "asasalint",
-		Doc:      "check for pass []any as any in func(...any)",
+		Doc:      "check for pass []any as any in variadic func(...any)",
 		Run:      a.run,
 		Requires: []*analysis.Analyzer{inspect.Analyzer},
 	}
@@ -41,8 +35,13 @@ type analyzer struct {
 	setting  LinterSetting
 }
 
-func (a *analyzer) init() {
-	if !a.setting.DisableDefaultExclude {
+func newAnalyzer(setting LinterSetting) *analyzer {
+	a := &analyzer{
+		excludes: make(map[string]bool),
+		setting:  setting,
+	}
+
+	if !a.setting.NoDefaultExclude {
 		for _, exclude := range strings.Split(DefaultExclude, `,`) {
 			a.excludes[exclude] = true
 		}
@@ -54,9 +53,7 @@ func (a *analyzer) init() {
 		}
 	}
 
-	for _, include := range a.setting.Include {
-		a.excludes[include] = false
-	}
+	return a
 }
 
 func (a *analyzer) run(pass *analysis.Pass) (interface{}, error) {
