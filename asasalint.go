@@ -12,28 +12,21 @@ import (
 	"golang.org/x/tools/go/ast/inspector"
 )
 
-var defaultExcludes []string
+const DefaultExclude = `Printf,Println,Errorf,Fprintf,Fprintln,Fatal,Fatalf,Panic,Panicf,Panicln,Print,Printf,Println,Sprintf,Sprintln,Error,Errorf,Info,Infof,Warn,Warnf,Debug,Debugf`
 
-func init() {
-	defaultExcludes = strings.Split(`Printf,Println,Errorf,Fprintf,Fprintln,Fatal,Fatalf,Panic,Panicf,Panicln,Print,Printf,Println,Sprintf,Sprintln,Error,Errorf,Info,Infof,Warn,Warnf,Debug,Debugf`, `,`)
+type LinterSetting struct {
+	Exclude               []string
+	Include               []string
+	DisableDefaultExclude bool
+	IgnoreInTest          bool
 }
 
-func NewAnalyzer(excludes []string, include []string) *analysis.Analyzer {
+func NewAnalyzer(setting LinterSetting) *analysis.Analyzer {
 	a := &analyzer{
 		excludes: make(map[string]bool),
+		setting:  setting,
 	}
-	for _, exclude := range defaultExcludes {
-		a.excludes[exclude] = true
-	}
-	for _, exclude := range excludes {
-		if exclude != "" {
-			a.excludes[exclude] = true
-		}
-	}
-
-	for _, include := range include {
-		a.excludes[include] = false
-	}
+	a.init()
 
 	return &analysis.Analyzer{
 		Name:     "asasalint",
@@ -45,6 +38,25 @@ func NewAnalyzer(excludes []string, include []string) *analysis.Analyzer {
 
 type analyzer struct {
 	excludes map[string]bool
+	setting  LinterSetting
+}
+
+func (a *analyzer) init() {
+	if !a.setting.DisableDefaultExclude {
+		for _, exclude := range strings.Split(DefaultExclude, `,`) {
+			a.excludes[exclude] = true
+		}
+	}
+
+	for _, exclude := range a.setting.Exclude {
+		if exclude != "" {
+			a.excludes[exclude] = true
+		}
+	}
+
+	for _, include := range a.setting.Include {
+		a.excludes[include] = false
+	}
 }
 
 func (a *analyzer) run(pass *analysis.Pass) (interface{}, error) {
@@ -58,6 +70,12 @@ func (a *analyzer) run(pass *analysis.Pass) (interface{}, error) {
 func (a *analyzer) AsCheckVisitor(pass *analysis.Pass) func(n ast.Node, push bool) bool {
 	return func(n ast.Node, push bool) (processed bool) {
 		processed = true
+		if a.setting.IgnoreInTest {
+			pos := pass.Fset.Position(n.Pos())
+			if strings.HasSuffix(pos.Filename, "_test.go") {
+				return
+			}
+		}
 
 		caller, ok := n.(*ast.CallExpr)
 		if !ok {

@@ -82,6 +82,11 @@ func (a *A) hello2(a int, b int) {
 }
 
 func TestNewAnalyzer(t *testing.T) {
-	_ = NewAnalyzer(nil, nil)
-	_ = NewAnalyzer([]string{"hello", ""}, []string{"hello", "world"})
+	_ = NewAnalyzer(LinterSetting{})
+	_ = NewAnalyzer(LinterSetting{
+		Exclude:               []string{"hello"},
+		Include:               []string{"hello", "world"},
+		DisableDefaultExclude: true,
+		IgnoreInTest:          true,
+	})
 }
