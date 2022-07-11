@@ -12,11 +12,11 @@ import (
 	"golang.org/x/tools/go/ast/inspector"
 )
 
-const DefaultExclude = `Printf,Println,Errorf,Fprintf,Fprintln,Fatal,Fatalf,Panic,Panicf,Panicln,Print,Printf,Println,Sprintf,Sprintln,Error,Errorf,Info,Infof,Warn,Warnf,Debug,Debugf`
+const BuiltinExclude = `Printf,Println,Fprintf,Fprintln,Fatal,Fatalf,Panic,Panicf,Panicln,Print,Printf,Println,Sprintf,Sprintln,Error,Errorf,Info,Infof,Warn,Warnf,Debug,Debugf`
 
 type LinterSetting struct {
 	Exclude          []string
-	NoDefaultExclude bool
+	NoBuiltinExclude bool
 	IgnoreInTest     bool
 }
 
@@ -41,8 +41,8 @@ func newAnalyzer(setting LinterSetting) *analyzer {
 		setting:  setting,
 	}
 
-	if !a.setting.NoDefaultExclude {
-		for _, exclude := range strings.Split(DefaultExclude, `,`) {
+	if !a.setting.NoBuiltinExclude {
+		for _, exclude := range strings.Split(BuiltinExclude, `,`) {
 			a.excludes[exclude] = true
 		}
 	}

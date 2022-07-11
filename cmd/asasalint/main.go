@@ -10,22 +10,22 @@ import (
 
 func main() {
 	var extraExclude string
-	var noDefaultExclude bool
+	var noBuiltinExclude bool
 	var ignoreInTest bool
 	flag.StringVar(&extraExclude,
 		"e",
 		"",
-		"Extra Exclude Func Names, like: FuncA,append,Append",
+		"extra exclude func names, like: FuncA,append,Append",
 	)
-	flag.BoolVar(&noDefaultExclude, "no-default-exclude", false,
-		"disbale the default exclude func names: "+asasalint.DefaultExclude)
+	flag.BoolVar(&noBuiltinExclude, "no-builtin-exclude", false,
+		"disbale the builtin exclude func names: "+asasalint.BuiltinExclude)
 	flag.BoolVar(&ignoreInTest, "ignore-in-test", false,
 		"ingore case in *_test.go")
 	flag.Parse()
 
 	setting := asasalint.LinterSetting{
 		Exclude:          strings.Split(extraExclude, ","),
-		NoDefaultExclude: noDefaultExclude,
+		NoBuiltinExclude: noBuiltinExclude,
 		IgnoreInTest:     ignoreInTest,
 	}
 	singlechecker.Main(asasalint.NewAnalyzer(setting))
