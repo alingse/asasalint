@@ -12,7 +12,7 @@ import (
 	"golang.org/x/tools/go/ast/inspector"
 )
 
-const BuiltinExclude = `Printf,Println,Fprintf,Fprintln,Fatal,Fatalf,Panic,Panicf,Panicln,Print,Printf,Println,Sprintf,Sprintln,Error,Errorf,Info,Infof,Warn,Warnf,Debug,Debugf`
+const BuiltinExclude = `Printf,Println,Fprintf,Fprintln,Fatal,Fatalf,Panic,Panicf,Panicln,Print,Printf,Println,Sprint,Sprintf,Sprintln,Error,Errorf,Info,Infof,Warn,Warnf,Debug,Debugf`
 
 type LinterSetting struct {
 	Exclude          []string
