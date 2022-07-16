@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"log"
 	"strings"
 
 	"github.com/alingse/asasalint"
@@ -10,23 +11,26 @@ import (
 
 func main() {
 	var extraExclude string
-	var noBuiltinExclude bool
-	var ignoreInTest bool
-	flag.StringVar(&extraExclude,
-		"e",
-		"",
-		"extra exclude func names, like: FuncA,append,Append",
-	)
-	flag.BoolVar(&noBuiltinExclude, "no-builtin-exclude", false,
-		"disbale the builtin exclude func names: "+asasalint.BuiltinExclude)
-	flag.BoolVar(&ignoreInTest, "ignore-in-test", false,
-		"ingore case in *_test.go")
+	var noBuiltinExclusions bool
+	var ignoreTest bool
+	flag.StringVar(&extraExclude, "e", "",
+		"Extra exclusions func names. It can be regular expressions. ex: FuncA,(A|a)ppend")
+	flag.BoolVar(&noBuiltinExclusions, "no-builtin-exclude", false,
+		"Disable the builtin exclusions func names: "+asasalint.BuiltinExclusions)
+	flag.BoolVar(&ignoreTest, "ignore-test", false,
+		"Ignore test files (*_test.go)")
 	flag.Parse()
 
 	setting := asasalint.LinterSetting{
-		Exclude:          strings.Split(extraExclude, ","),
-		NoBuiltinExclude: noBuiltinExclude,
-		IgnoreInTest:     ignoreInTest,
+		Exclude:             strings.Split(extraExclude, ","),
+		NoBuiltinExclusions: noBuiltinExclusions,
+		IgnoreTest:          ignoreTest,
 	}
-	singlechecker.Main(asasalint.NewAnalyzer(setting))
+
+	analyzer, err := asasalint.NewAnalyzer(setting)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	singlechecker.Main(analyzer)
 }
