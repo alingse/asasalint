@@ -83,29 +83,43 @@ func (a *A) hello2(a int, b int) {
 	})
 }
 
-func TestNewAnalyzer(t *testing.T) {
-	_ = NewAnalyzer(LinterSetting{})
-	_ = NewAnalyzer(LinterSetting{
-		Exclude:          []string{"hello"},
-		NoBuiltinExclude: true,
-		IgnoreInTest:     true,
-	})
-}
-
 func TestAnalyzer(t *testing.T) {
-	analysistest.RunWithSuggestedFixes(t, analysistest.TestData(), NewAnalyzer(LinterSetting{}), "basic")
-}
-
-func TestAnalyzer_custom_NoBuiltinExclude(t *testing.T) {
-	setting := LinterSetting{
-		NoBuiltinExclude: true,
+	testCases := []struct {
+		desc     string
+		settings LinterSetting
+	}{
+		{
+			desc:     "basic",
+			settings: LinterSetting{},
+		},
+		{
+			desc: "nobuiltin",
+			settings: LinterSetting{
+				NoBuiltinExclusions: true,
+			},
+		},
+		{
+			desc: "ignoretest",
+			settings: LinterSetting{
+				IgnoreTest: true,
+			},
+		},
+		{
+			desc: "custom",
+			settings: LinterSetting{
+				Exclude: []string{"get.+"},
+			},
+		},
 	}
-	analysistest.RunWithSuggestedFixes(t, analysistest.TestData(), NewAnalyzer(setting), "nobuiltin")
-}
 
-func TestAnalyzer_custom_IgnoreInTest(t *testing.T) {
-	setting := LinterSetting{
-		IgnoreInTest: true,
+	for _, test := range testCases {
+		t.Run(test.desc, func(t *testing.T) {
+			a, err := NewAnalyzer(test.settings)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			analysistest.RunWithSuggestedFixes(t, analysistest.TestData(), a, test.desc)
+		})
 	}
-	analysistest.RunWithSuggestedFixes(t, analysistest.TestData(), NewAnalyzer(setting), "ignoretest")
 }

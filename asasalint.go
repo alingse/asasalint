@@ -5,6 +5,7 @@ import (
 	"go/ast"
 	"go/token"
 	"go/types"
+	"regexp"
 	"strings"
 
 	"golang.org/x/tools/go/analysis"
@@ -12,57 +13,54 @@ import (
 	"golang.org/x/tools/go/ast/inspector"
 )
 
-const BuiltinExclude = "Print,Printf,Println," +
-	"Fprint,Fprintf,Fprintln," +
-	"Sprint,Sprintf,Sprintln," +
-	"Fatal,Fatalf,Fatalln," +
-	"Panic,Panicf,Panicln," +
-	"Error,Errorf,Errorln," +
-	"Warn,Warnf,Warnln," +
-	"Warning,Warningf,Warningln," +
-	"Info,Infof,Infoln," +
-	"Debug,Debugf,Debugln"
+const BuiltinExclusions = `^(Print|Fprint|Sprint|Fatal|Panic|Error|Warn|Warning|Info|Debug)(|f|ln)$`
 
 type LinterSetting struct {
-	Exclude          []string
-	NoBuiltinExclude bool
-	IgnoreInTest     bool
+	Exclude             []string
+	NoBuiltinExclusions bool
+	IgnoreTest          bool
 }
 
-func NewAnalyzer(setting LinterSetting) *analysis.Analyzer {
-	a := newAnalyzer(setting)
+func NewAnalyzer(setting LinterSetting) (*analysis.Analyzer, error) {
+	a, err := newAnalyzer(setting)
+	if err != nil {
+		return nil, err
+	}
+
 	return &analysis.Analyzer{
 		Name:     "asasalint",
 		Doc:      "check for pass []any as any in variadic func(...any)",
 		Run:      a.run,
 		Requires: []*analysis.Analyzer{inspect.Analyzer},
-	}
+	}, nil
 }
 
 type analyzer struct {
-	excludes map[string]bool
+	excludes []*regexp.Regexp
 	setting  LinterSetting
 }
 
-func newAnalyzer(setting LinterSetting) *analyzer {
+func newAnalyzer(setting LinterSetting) (*analyzer, error) {
 	a := &analyzer{
-		excludes: make(map[string]bool),
-		setting:  setting,
+		setting: setting,
 	}
 
-	if !a.setting.NoBuiltinExclude {
-		for _, exclude := range strings.Split(BuiltinExclude, `,`) {
-			a.excludes[exclude] = true
-		}
+	if !a.setting.NoBuiltinExclusions {
+		a.excludes = append(a.excludes, regexp.MustCompile(BuiltinExclusions))
 	}
 
 	for _, exclude := range a.setting.Exclude {
 		if exclude != "" {
-			a.excludes[exclude] = true
+			exp, err := regexp.Compile(exclude)
+			if err != nil {
+				return nil, err
+			}
+
+			a.excludes = append(a.excludes, exp)
 		}
 	}
 
-	return a
+	return a, nil
 }
 
 func (a *analyzer) run(pass *analysis.Pass) (interface{}, error) {
@@ -75,7 +73,7 @@ func (a *analyzer) run(pass *analysis.Pass) (interface{}, error) {
 
 func (a *analyzer) AsCheckVisitor(pass *analysis.Pass) func(ast.Node) {
 	return func(n ast.Node) {
-		if a.setting.IgnoreInTest {
+		if a.setting.IgnoreTest {
 			pos := pass.Fset.Position(n.Pos())
 			if strings.HasSuffix(pos.Filename, "_test.go") {
 				return
@@ -94,8 +92,11 @@ func (a *analyzer) AsCheckVisitor(pass *analysis.Pass) func(ast.Node) {
 		}
 
 		fnName := getFuncName(caller)
-		if a.excludes[fnName] {
-			return
+
+		for _, exclude := range a.excludes {
+			if exclude.MatchString(fnName) {
+				return
+			}
 		}
 
 		fnType := pass.TypesInfo.TypeOf(caller.Fun)
