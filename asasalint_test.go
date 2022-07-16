@@ -7,6 +7,8 @@ import (
 	"go/token"
 	"go/types"
 	"testing"
+
+	"golang.org/x/tools/go/analysis/analysistest"
 )
 
 const filename = "<src>"
@@ -88,4 +90,8 @@ func TestNewAnalyzer(t *testing.T) {
 		NoBuiltinExclude: true,
 		IgnoreInTest:     true,
 	})
+}
+
+func TestAnalyzer(t *testing.T) {
+	analysistest.RunWithSuggestedFixes(t, analysistest.TestData(), NewAnalyzer(LinterSetting{}), "simple")
 }
