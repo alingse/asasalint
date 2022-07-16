@@ -1,7 +1,10 @@
 package main
 
-func main() {
+import "testing"
+
+func TestSimple(t *testing.T) {
 	var a = []any{1, 2, 3}
+
 	getArgsLength(a) // want `pass \[\]any as any to func getArgsLength func\(args \.\.\.any\) int`
 	getArgsLength(a...)
 	getArgsLength(1, 2, 3)
