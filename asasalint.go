@@ -60,13 +60,12 @@ func (a *analyzer) run(pass *analysis.Pass) (interface{}, error) {
 	inspectorInfo := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
 	nodeFilter := []ast.Node{(*ast.CallExpr)(nil)}
 
-	inspectorInfo.Nodes(nodeFilter, a.AsCheckVisitor(pass))
+	inspectorInfo.Preorder(nodeFilter, a.AsCheckVisitor(pass))
 	return nil, nil
 }
 
-func (a *analyzer) AsCheckVisitor(pass *analysis.Pass) func(n ast.Node, push bool) bool {
-	return func(n ast.Node, push bool) (processed bool) {
-		processed = true
+func (a *analyzer) AsCheckVisitor(pass *analysis.Pass) func(ast.Node) {
+	return func(n ast.Node) {
 		if a.setting.IgnoreInTest {
 			pos := pass.Fset.Position(n.Pos())
 			if strings.HasSuffix(pos.Filename, "_test.go") {
@@ -84,6 +83,7 @@ func (a *analyzer) AsCheckVisitor(pass *analysis.Pass) func(n ast.Node, push boo
 		if len(caller.Args) == 0 {
 			return
 		}
+
 		fnName := getFuncName(caller)
 		if a.excludes[fnName] {
 			return
@@ -107,10 +107,9 @@ func (a *analyzer) AsCheckVisitor(pass *analysis.Pass) func(n ast.Node, push boo
 		node := lastArg
 
 		d := analysis.Diagnostic{
-			Pos: node.Pos(),
-			End: node.End(),
-			Message: fmt.Sprintf("pass []any as any to func %s %s",
-				fnName, fnType.String()),
+			Pos:      node.Pos(),
+			End:      node.End(),
+			Message:  fmt.Sprintf("pass []any as any to func %s %s", fnName, fnType.String()),
 			Category: "asasalint",
 		}
 		pass.Report(d)
