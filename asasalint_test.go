@@ -93,5 +93,19 @@ func TestNewAnalyzer(t *testing.T) {
 }
 
 func TestAnalyzer(t *testing.T) {
-	analysistest.RunWithSuggestedFixes(t, analysistest.TestData(), NewAnalyzer(LinterSetting{}), "simple")
+	analysistest.RunWithSuggestedFixes(t, analysistest.TestData(), NewAnalyzer(LinterSetting{}), "basic")
+}
+
+func TestAnalyzer_custom_NoBuiltinExclude(t *testing.T) {
+	setting := LinterSetting{
+		NoBuiltinExclude: true,
+	}
+	analysistest.RunWithSuggestedFixes(t, analysistest.TestData(), NewAnalyzer(setting), "nobuiltin")
+}
+
+func TestAnalyzer_custom_IgnoreInTest(t *testing.T) {
+	setting := LinterSetting{
+		IgnoreInTest: true,
+	}
+	analysistest.RunWithSuggestedFixes(t, analysistest.TestData(), NewAnalyzer(setting), "ignoretest")
 }

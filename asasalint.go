@@ -12,7 +12,16 @@ import (
 	"golang.org/x/tools/go/ast/inspector"
 )
 
-const BuiltinExclude = `Printf,Println,Fprintf,Fprintln,Fatal,Fatalf,Panic,Panicf,Panicln,Print,Printf,Println,Sprint,Sprintf,Sprintln,Error,Errorf,Info,Infof,Warn,Warnf,Debug,Debugf`
+const BuiltinExclude = "Print,Printf,Println," +
+	"Fprintf,Fprintln," +
+	"Sprint,Sprintf,Sprintln," +
+	"Fatal,Fatalf,Fatalln," +
+	"Panic,Panicf,Panicln," +
+	"Error,Errorf,Errorln," +
+	"Warn,Warnf,Warnln," +
+	"Warning,Warningf,Warningln," +
+	"Info,Infof,Infoln," +
+	"Debug,Debugf,Debugln"
 
 type LinterSetting struct {
 	Exclude          []string
@@ -117,13 +126,14 @@ func (a *analyzer) AsCheckVisitor(pass *analysis.Pass) func(ast.Node) {
 }
 
 func getFuncName(caller *ast.CallExpr) string {
-	if id, ok := caller.Fun.(*ast.Ident); ok {
-		return id.Name
+	switch n := caller.Fun.(type) {
+	case *ast.Ident:
+		return n.Name
+	case *ast.SelectorExpr:
+		return n.Sel.Name
+	default:
+		return ""
 	}
-	if s, ok := caller.Fun.(*ast.SelectorExpr); ok {
-		return s.Sel.Name
-	}
-	return ""
 }
 
 func isSliceAnyVariadicFuncType(typ types.Type) (r bool) {
