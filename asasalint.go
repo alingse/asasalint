@@ -13,7 +13,7 @@ import (
 )
 
 const BuiltinExclude = "Print,Printf,Println," +
-	"Fprintf,Fprintln," +
+	"Fprint,Fprintf,Fprintln," +
 	"Sprint,Sprintf,Sprintln," +
 	"Fatal,Fatalf,Fatalln," +
 	"Panic,Panicf,Panicln," +
