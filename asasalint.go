@@ -113,7 +113,6 @@ func (a *analyzer) AsCheckVisitor(pass *analysis.Pass) func(ast.Node) {
 			Category: "asasalint",
 		}
 		pass.Report(d)
-		return
 	}
 }
 
