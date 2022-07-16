@@ -3,39 +3,39 @@ package main
 import "testing"
 
 func TestLogger(t *testing.T) {
-	var l Logger
+	var logger Logger
 
 	var a = []any{1, 2, 3}
 
-	l.Debug(a)        // want `pass \[\]any as any to func Debug func\(args \.\.\.interface{}\)`
-	l.Debugf("%v", a) // want `pass \[\]any as any to func Debugf func\(format string, args \.\.\.interface{}\)`
-	l.Debugln(a)      // want `pass \[\]any as any to func Debugln func\(args \.\.\.interface{}\)`
+	logger.Debug(a)        // want `pass \[\]any as any to func logger.Debug func\(args \.\.\.interface{}\)`
+	logger.Debugf("%v", a) // want `pass \[\]any as any to func logger.Debugf func\(format string, args \.\.\.interface{}\)`
+	logger.Debugln(a)      // want `pass \[\]any as any to func logger.Debugln func\(args \.\.\.interface{}\)`
 
-	l.Info(a)        // want `pass \[\]any as any to func Info func\(args \.\.\.interface{}\)`
-	l.Infof("%v", a) // want `pass \[\]any as any to func Infof func\(format string, args \.\.\.interface{}\)`
-	l.Infoln(a)      // want `pass \[\]any as any to func Infoln func\(args \.\.\.interface{}\)`
+	logger.Info(a)        // want `pass \[\]any as any to func logger.Info func\(args \.\.\.interface{}\)`
+	logger.Infof("%v", a) // want `pass \[\]any as any to func logger.Infof func\(format string, args \.\.\.interface{}\)`
+	logger.Infoln(a)      // want `pass \[\]any as any to func logger.Infoln func\(args \.\.\.interface{}\)`
 
-	l.Print(a)        // want `pass \[\]any as any to func Print func\(args \.\.\.interface{}\)`
-	l.Printf("%v", a) // want `pass \[\]any as any to func Printf func\(format string, args \.\.\.interface{}\)`
-	l.Println(a)      // want `pass \[\]any as any to func Println func\(args \.\.\.interface{}\)`
+	logger.Print(a)        // want `pass \[\]any as any to func logger.Print func\(args \.\.\.interface{}\)`
+	logger.Printf("%v", a) // want `pass \[\]any as any to func logger.Printf func\(format string, args \.\.\.interface{}\)`
+	logger.Println(a)      // want `pass \[\]any as any to func logger.Println func\(args \.\.\.interface{}\)`
 
-	l.Warn(a)        // want `pass \[\]any as any to func Warn func\(args \.\.\.interface{}\)`
-	l.Warnf("%v", a) // want `pass \[\]any as any to func Warnf func\(format string, args \.\.\.interface{}\)`
-	l.Warnln(a)      // want `pass \[\]any as any to func Warnln func\(args \.\.\.interface{}\)`
+	logger.Warn(a)        // want `pass \[\]any as any to func logger.Warn func\(args \.\.\.interface{}\)`
+	logger.Warnf("%v", a) // want `pass \[\]any as any to func logger.Warnf func\(format string, args \.\.\.interface{}\)`
+	logger.Warnln(a)      // want `pass \[\]any as any to func logger.Warnln func\(args \.\.\.interface{}\)`
 
-	l.Warning(a)        // want `pass \[\]any as any to func Warning func\(args \.\.\.interface{}\)`
-	l.Warningf("%v", a) // want `pass \[\]any as any to func Warningf func\(format string, args \.\.\.interface{}\)`
-	l.Warningln(a)      // want `pass \[\]any as any to func Warningln func\(args \.\.\.interface{}\)`
+	logger.Warning(a)        // want `pass \[\]any as any to func logger.Warning func\(args \.\.\.interface{}\)`
+	logger.Warningf("%v", a) // want `pass \[\]any as any to func logger.Warningf func\(format string, args \.\.\.interface{}\)`
+	logger.Warningln(a)      // want `pass \[\]any as any to func logger.Warningln func\(args \.\.\.interface{}\)`
 
-	l.Error(a)        // want `pass \[\]any as any to func Error func\(args \.\.\.interface{}\)`
-	l.Errorf("%v", a) // want `pass \[\]any as any to func Errorf func\(format string, args \.\.\.interface{}\)`
-	l.Errorln(a)      // want `pass \[\]any as any to func Errorln func\(args \.\.\.interface{}\)`
+	logger.Error(a)        // want `pass \[\]any as any to func logger.Error func\(args \.\.\.interface{}\)`
+	logger.Errorf("%v", a) // want `pass \[\]any as any to func logger.Errorf func\(format string, args \.\.\.interface{}\)`
+	logger.Errorln(a)      // want `pass \[\]any as any to func logger.Errorln func\(args \.\.\.interface{}\)`
 
-	l.Fatal(a)        // want `pass \[\]any as any to func Fatal func\(args \.\.\.interface{}\)`
-	l.Fatalf("%v", a) // want `pass \[\]any as any to func Fatalf func\(format string, args \.\.\.interface{}\)`
-	l.Fatalln(a)      // want `pass \[\]any as any to func Fatalln func\(args \.\.\.interface{}\)`
+	logger.Fatal(a)        // want `pass \[\]any as any to func logger.Fatal func\(args \.\.\.interface{}\)`
+	logger.Fatalf("%v", a) // want `pass \[\]any as any to func logger.Fatalf func\(format string, args \.\.\.interface{}\)`
+	logger.Fatalln(a)      // want `pass \[\]any as any to func logger.Fatalln func\(args \.\.\.interface{}\)`
 
-	l.Panic(a)        // want `pass \[\]any as any to func Panic func\(args \.\.\.interface{}\)`
-	l.Panicf("%v", a) // want `pass \[\]any as any to func Panicf func\(format string, args \.\.\.interface{}\)`
-	l.Panicln(a)      // want `pass \[\]any as any to func Panicln func\(args \.\.\.interface{}\)`
+	logger.Panic(a)        // want `pass \[\]any as any to func logger.Panic func\(args \.\.\.interface{}\)`
+	logger.Panicf("%v", a) // want `pass \[\]any as any to func logger.Panicf func\(format string, args \.\.\.interface{}\)`
+	logger.Panicln(a)      // want `pass \[\]any as any to func logger.Panicln func\(args \.\.\.interface{}\)`
 }

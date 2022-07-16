@@ -54,33 +54,69 @@ func TestIsSliceAnyVariadicFuncType(t *testing.T) {
 }
 
 func TestGetFuncName(t *testing.T) {
-	src := `package p
+	testCases := []struct {
+		desc     string
+		src      string
+		expected string
+	}{
+		{
+			desc: "function",
+			src: `package p
 func hello(a int, b ...any) {}
 func hello2(a int, b int) { hello(a, b)}
+`,
+			expected: "hello",
+		},
+		{
+			desc: "method",
+			src: `package p
+type A struct {}
+func (a *A) hello(a int, b ...any) {}
+func (a *A) hello2(a int, b int) {
+	a.hello(a, b)
+}
+`,
+			expected: "a.hello",
+		},
+		{
+			desc: "function inside a method",
+			src: `package p
 type A struct {}
 func (a *A) hello(a int, b ...any) {
 	hello(a, b...)
 }
-func (a *A) hello2(a int, b int) {
-	a.hello(a, b)
-}
-`
-	fset := token.NewFileSet()
-	f, err := parser.ParseFile(fset, "src.go", src, 0)
-	if err != nil {
-		panic(err)
+`,
+			expected: "hello",
+		},
 	}
 
-	ast.Inspect(f, func(n ast.Node) bool {
-		switch x := n.(type) {
-		case *ast.CallExpr:
-			s := getFuncName(x)
-			if s != "hello" {
-				t.Errorf("getFuncName(%#v) = %v, want hello", x.Fun, s)
+	for _, test := range testCases {
+		test := test
+		t.Run(test.desc, func(t *testing.T) {
+			t.Parallel()
+
+			fset := token.NewFileSet()
+			f, err := parser.ParseFile(fset, "src.go", test.src, 0)
+			if err != nil {
+				panic(err)
 			}
-		}
-		return true
-	})
+
+			ast.Inspect(f, func(n ast.Node) bool {
+				switch x := n.(type) {
+				case *ast.CallExpr:
+					s, err := getFuncName(fset, x)
+					if err != nil {
+						t.Fatal(err)
+					}
+
+					if s != test.expected {
+						t.Errorf("%s: got %s, want %s", fset.Position(x.Fun.Pos()), s, test.expected)
+					}
+				}
+				return true
+			})
+		})
+	}
 }
 
 func TestAnalyzer(t *testing.T) {
