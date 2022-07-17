@@ -1,10 +1,13 @@
 package asasalint
 
 import (
+	"bytes"
 	"fmt"
 	"go/ast"
+	"go/printer"
 	"go/token"
 	"go/types"
+	"log"
 	"regexp"
 	"strings"
 
@@ -13,7 +16,7 @@ import (
 	"golang.org/x/tools/go/ast/inspector"
 )
 
-const BuiltinExclusions = `^(Print|Fprint|Sprint|Fatal|Panic|Error|Warn|Warning|Info|Debug)(|f|ln)$`
+const BuiltinExclusions = `^(fmt|log|logger)\.(Print|Fprint|Sprint|Fatal|Panic|Error|Warn|Warning|Info|Debug)(|f|ln)$`
 
 type LinterSetting struct {
 	Exclude             []string
@@ -91,7 +94,11 @@ func (a *analyzer) AsCheckVisitor(pass *analysis.Pass) func(ast.Node) {
 			return
 		}
 
-		fnName := getFuncName(caller)
+		fnName, err := getFuncName(pass.Fset, caller)
+		if err != nil {
+			log.Println(err)
+			return
+		}
 
 		for _, exclude := range a.excludes {
 			if exclude.MatchString(fnName) {
@@ -126,15 +133,13 @@ func (a *analyzer) AsCheckVisitor(pass *analysis.Pass) func(ast.Node) {
 	}
 }
 
-func getFuncName(caller *ast.CallExpr) string {
-	switch n := caller.Fun.(type) {
-	case *ast.Ident:
-		return n.Name
-	case *ast.SelectorExpr:
-		return n.Sel.Name
-	default:
-		return ""
+func getFuncName(fset *token.FileSet, caller *ast.CallExpr) (string, error) {
+	buf := new(bytes.Buffer)
+	if err := printer.Fprint(buf, fset, caller.Fun); err != nil {
+		return "", fmt.Errorf("unable to print node at %s: %w", fset.Position(caller.Fun.Pos()), err)
 	}
+
+	return buf.String(), nil
 }
 
 func isSliceAnyVariadicFuncType(typ types.Type) (r bool) {
