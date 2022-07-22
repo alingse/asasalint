@@ -46,4 +46,14 @@ func TestTest(t *testing.T) {
 		t.Fatal(a)
 		t.Fatalf("%v", a)
 	}
+
+	var tt = t
+	if len(a) != 3 {
+		tt.Log(a)          // want `pass \[\]any as any to func tt.Log func\(args \.\.\.any\)`
+		tt.Logf("%v", a)   // want `pass \[\]any as any to func tt.Logf func\(format string, args \.\.\.any\)`
+		tt.Error(a)        // want `pass \[\]any as any to func tt.Error func\(args \.\.\.any\)`
+		tt.Errorf("%v", a) // want `pass \[\]any as any to func tt.Errorf func\(format string, args \.\.\.any\)`
+		tt.Fatal(a)        // want `pass \[\]any as any to func tt.Fatal func\(args \.\.\.any\)`
+		tt.Fatalf("%v", a) // want `pass \[\]any as any to func tt.Fatalf func\(format string, args \.\.\.any\)`
+	}
 }
