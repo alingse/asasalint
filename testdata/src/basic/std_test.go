@@ -35,3 +35,15 @@ func TestStd(t *testing.T) {
 	log.Panicf("%v", a)
 	log.Panic(a)
 }
+
+func TestTest(t *testing.T) {
+	var a = []any{1, 2, 3}
+	if len(a) != 3 {
+		t.Log(a)
+		t.Logf("%v", a)
+		t.Error(a)
+		t.Errorf("%v", a)
+		t.Fatal(a)
+		t.Fatalf("%v", a)
+	}
+}
